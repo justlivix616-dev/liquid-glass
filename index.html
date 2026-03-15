@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" class="lenis lenis-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiquidGlass</title>
+    <link rel="stylesheet" href="style.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.3/dist/lenis.min.js"></script>
+
+</head>
+<body>
+
+    <div id="webgl-container"></div>
+
+    <header>
+        <div class="logo">LiquidGlass</div>
+        <nav>
+            <a href="#hero">Product</a>
+            <a href="#specs">Engineering</a>
+            <a href="#features">Features</a>
+            <a href="#colors">Design</a>
+        </nav>
+        <div class="btn-buy">Buy Now</div>
+    </header>
+
+    <main>
+        <section class="hero" id="hero">
+            <h1>LiquidGlass</h1>
+            <p>The smallest audio experience.</p>
+        </section>
+
+        <section class="specs-section" id="specs">
+            <div class="specs-content">
+                <div class="spec-card">
+                    <h3>Liquid Core Architecture</h3>
+                    <p style="color: var(--text-sub); line-height: 1.6;">A custom-designed acoustic chamber suspended in a vacuum, completely eliminating distortion at high volumes.</p>
+                </div>
+                <div class="spec-card">
+                    <h3>Seamless Glass</h3>
+                    <p style="color: var(--text-sub); line-height: 1.6;">Forged from a single block of aerospace-grade silica. No buttons, no ports. Just pure interaction.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <div class="features-grid">
+                <div class="bento-item item-1">
+                    <h2>Ultra Compact</h2>
+                    <p style="color: var(--text-sub);">Fits in the palm of your hand, fills the entire room.</p>
+                </div>
+                <div class="bento-item item-2">
+                    <h2>Long Battery Life</h2>
+                    <p style="color: var(--text-sub);">All-day continuous playback.</p>
+                </div>
+                <div class="bento-item item-3">
+                    <h2>Waterproof</h2>
+                    <p style="color: var(--text-sub);">Water and dust resistance.</p>
+                </div>
+                <div class="bento-item item-4">
+                    <h2>Dynamic Sound</h2>
+                    <p style="color: var(--text-sub);">Dynamic head tracking places sound all around you.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="colors" id="colors">
+            <h2>Choose your style</h2>
+            <div class="color-picker">
+                <div class="color-dot dot-white" onclick="morphColor(0xffffff)"></div>
+                <div class="color-dot dot-black" onclick="morphColor(0x111111)"></div>
+                <div class="color-dot dot-silver" onclick="morphColor(0x9999aa)"></div>
+            </div>
+        </section>
+
+        <footer>
+            <div class="footer-huge">LIQUID GLASS</div>
+            <div class="footer-bottom">
+                <span>©2026 LiquidGlass</span>
+                <span>Designed in New-York</span>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        const lenis = new Lenis({
+            duration: 1.2,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            smoothWheel: true
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        const container = document.getElementById('webgl-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        container.appendChild(renderer.domElement);
+
+        const geometry = new THREE.CapsuleGeometry(1.2, 1.8, 64, 64);
+        
+        const material = new THREE.MeshPhysicalMaterial({
+            color: 0xffffff,
+            metalness: 0.2,
+            roughness: 0.1,
+            transmission: 0.9,
+            ior: 1.5,
+            thickness: 2.0,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.1,
+            transparent: true
+        });
+
+        const pod = new THREE.Mesh(geometry, material);
+        scene.add(pod);
+
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 2);
+        scene.add(hemiLight);
+
+        const light1 = new THREE.PointLight(0xffffff, 100);
+        light1.position.set(5, 5, 5);
+        scene.add(light1);
+
+        const light2 = new THREE.PointLight(0xaaaaaa, 50);
+        light2.position.set(-5, -5, -5);
+        scene.add(light2);
+
+        camera.position.z = 8;
+
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+
+        window.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) * 0.002;
+            mouseY = (e.clientY - window.innerHeight / 2) * 0.002;
+        });
+
+        window.morphColor = function(hexColor) {
+            gsap.to(material.color, {
+                r: (hexColor >> 16 & 255) / 255,
+                g: (hexColor >> 8 & 255) / 255,
+                b: (hexColor & 255) / 255,
+                duration: 1.5,
+                ease: "power2.inOut"
+            });
+        };
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.to(pod.position, {
+            x: window.innerWidth > 900 ? 3 : 0,
+            y: window.innerWidth > 900 ? 0 : 2,
+            scrollTrigger: {
+                trigger: ".specs-section",
+                start: "top center",
+                end: "bottom center",
+                scrub: 1
+            }
+        });
+
+        gsap.to(pod.scale, {
+            x: 1.5,
+            y: 1.5,
+            z: 1.5,
+            scrollTrigger: {
+                trigger: ".features",
+                start: "top bottom",
+                end: "center center",
+                scrub: 1
+            }
+        });
+
+        gsap.utils.toArray('.spec-card').forEach((card, i) => {
+            gsap.to(card, {
+                opacity: 1,
+                y: 0,
+                scrollTrigger: {
+                    trigger: card,
+                    start: "top 80%",
+                    end: "top 50%",
+                    scrub: 1
+                }
+            });
+        });
+
+        function animate() {
+            targetX = mouseX * 0.5;
+            targetY = mouseY * 0.5;
+            
+            pod.rotation.y += 0.005;
+            pod.rotation.x += 0.002;
+
+            pod.rotation.y += 0.05 * (targetX - pod.rotation.y);
+            pod.rotation.x += 0.05 * (targetY - pod.rotation.x);
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
